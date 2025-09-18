@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, User, Check } from "lucide-react";
 
-// Objek warna yang kita definisikan agar konsisten
 const colors = {
   primary: { 300: "#90cdf4", 500: "#3182ce" },
   gray: {
@@ -16,8 +15,8 @@ const colors = {
   primaryBg: "#ebf8ff",
 };
 
-// Semua style dari styled-components diterjemahkan ke sini
 const styles = {
+  // ... (semua style lainnya tetap sama)
   pageHeader: { textAlign: "center", marginBottom: "3rem" },
   pageTitle: {
     fontSize: "2rem",
@@ -42,12 +41,10 @@ const styles = {
     transition: "all 0.2s ease-in-out",
   },
   slotCardHover: {
-    // Style untuk hover (simulasi)
     transform: "translateY(-2px)",
     borderColor: colors.primary[300],
   },
   slotCardSelected: {
-    // Style untuk kartu yang dipilih
     borderColor: colors.primary[500],
     backgroundColor: colors.primaryBg,
   },
@@ -130,19 +127,18 @@ function BookingPage() {
   const [notes, setNotes] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
-  const [hoveredSlotId, setHoveredSlotId] = useState(null); // State untuk simulasi hover
+  const [hoveredSlotId, setHoveredSlotId] = useState(null);
   const navigate = useNavigate();
 
-  // Mengambil data user dari localStorage, menggantikan useAuth
   const userData = JSON.parse(localStorage.getItem("userData"));
 
   useEffect(() => {
     async function loadAvailableSlots() {
       try {
         setIsLoading(true);
-        const response = await fetch(
-          "http://localhost:1337/api/slot-jadwals?filters[status][$eq]=tersedia"
-        );
+        const apiUrl =
+          "http://localhost:1337/api/slot-jadwals?filters[status_slot][$eq]=tersedia";
+        const response = await fetch(apiUrl);
         if (!response.ok) throw new Error("Gagal memuat slot.");
         const result = await response.json();
         setAvailableSlots(result.data);
@@ -166,18 +162,18 @@ function BookingPage() {
       setIsBooking(true);
       const authToken = localStorage.getItem("authToken");
 
-      // 1. Buat entri Jadwal Konsultasi baru
       const bookingRes = await fetch(
-        "http://localhost:1337/api/jadwal-availabels",
+        "http://localhost:1337/api/jadwal-konsultasis",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`, // Kita akan gunakan ini saat login sudah asli
+            Authorization: `Bearer ${authToken}`,
           },
           body: JSON.stringify({
             data: {
-              waktu_sesi: selectedSlot.attributes.waktu_mulai,
+              // PERBAIKAN: Menghapus .attributes
+              waktu_sesi: selectedSlot.waktu_mulai,
               status: "dijadwalkan",
               klien: userData.id,
               slot_jadwal: selectedSlot.id,
@@ -189,7 +185,6 @@ function BookingPage() {
 
       if (!bookingRes.ok) throw new Error("Gagal membuat janji temu.");
 
-      // 2. Update status Slot Jadwal menjadi 'dipesan'
       const slotUpdateRes = await fetch(
         `http://localhost:1337/api/slot-jadwals/${selectedSlot.id}`,
         {
@@ -198,17 +193,12 @@ function BookingPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${authToken}`,
           },
-          body: JSON.stringify({
-            data: {
-              status: "dipesan",
-            },
-          }),
+          body: JSON.stringify({ data: { status_slot: "dipesan" } }),
         }
       );
 
       if (!slotUpdateRes.ok) throw new Error("Gagal memperbarui status slot.");
 
-      // 3. Jika semua berhasil, kembali ke dashboard
       alert("Booking berhasil!");
       navigate("/");
     } catch (error) {
@@ -236,9 +226,7 @@ function BookingPage() {
     };
   };
 
-  if (isLoading) {
-    return <div>Memuat jadwal tersedia...</div>;
-  }
+  if (isLoading) return <div>Memuat jadwal tersedia...</div>;
 
   return (
     <div>
@@ -260,9 +248,8 @@ function BookingPage() {
         <>
           <div style={styles.slotsGrid}>
             {availableSlots.map((slot) => {
-              const { date, time } = formatDateTime(
-                slot.attributes.waktu_mulai
-              );
+              // PERBAIKAN: Menghapus .attributes
+              const { date, time } = formatDateTime(slot.waktu_mulai);
               const isSelected = selectedSlot?.id === slot.id;
               const isHovered = hoveredSlotId === slot.id;
 
@@ -281,11 +268,9 @@ function BookingPage() {
                   onMouseLeave={() => setHoveredSlotId(null)}
                 >
                   <div style={styles.slotHeader}>
-                    {/* Nanti kita bisa tambahkan jenis layanan di sini jika ada relasinya */}
                     <div style={styles.serviceType}>Konsultasi Umum</div>
                     {isSelected && <Check style={styles.selectedIcon} />}
                   </div>
-
                   <div style={styles.slotDetails}>
                     <div style={styles.slotDetail}>
                       <Calendar style={styles.slotDetailIcon} />
@@ -295,7 +280,6 @@ function BookingPage() {
                       <Clock style={styles.slotDetailIcon} />
                       <span style={styles.slotDetailText}>{time}</span>
                     </div>
-                    {/* Nanti kita bisa tambahkan nama konselor di sini */}
                     <div style={styles.slotDetail}>
                       <User style={styles.slotDetailIcon} />
                       <span style={styles.slotDetailText}>Konselor UNKLAB</span>

@@ -7,12 +7,14 @@ import BookingPage from "./pages/BookingPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
 import LoginPage from "./pages/LoginPage.jsx";
+import AuthCallback from "./pages/AuthCallback.jsx";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/auth/callback" element={<AuthCallback />} />
         <Route
           path="/"
           element={
