@@ -55,10 +55,26 @@ function DashboardPage() {
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState("Mahasiswa");
 
-  // ======================= PERBAIKAN UTAMA DI SINI =======================
   useEffect(() => {
-    // Ambil data user dari localStorage DI DALAM useEffect
-    const userData = JSON.parse(localStorage.getItem("userData"));
+    // Ambil data user dari localStorage dengan pengecekan validitas
+    let userData = null;
+    try {
+      const userString = localStorage.getItem("userData");
+      if (userString) {
+        userData = JSON.parse(userString);
+      }
+    } catch (e) {
+      // Jika parsing gagal, hapus data user yang rusak
+      localStorage.removeItem("userData");
+      userData = null;
+    }
+
+    const authToken = localStorage.getItem("authToken");
+    // Jika tidak ada userData atau token, redirect ke login
+    if (!userData || !authToken) {
+      window.location.href = "/login";
+      return;
+    }
 
     // Set nama user untuk sapaan
     if (userData?.username) {
@@ -66,16 +82,9 @@ function DashboardPage() {
     }
 
     async function fetchUpcomingAppointment() {
-      // Pastikan ada userData dan token sebelum fetch
-      const authToken = localStorage.getItem("authToken");
-      if (!userData || !authToken) {
-        setIsLoading(false); // Berhenti loading jika tidak ada data user/token
-        return;
-      }
-
       const now = new Date().toISOString();
       const apiUrl =
-        `http://localhost:1337/api/jadwal-konsultasis?` +
+        `http://localhost:1337/api/jadwal-availables?` +
         `filters[klien][id][$eq]=${userData.id}` +
         `&filters[status][$eq]=dijadwalkan` +
         `&filters[waktu_sesi][$gte]=${now}` +
@@ -96,13 +105,12 @@ function DashboardPage() {
       } catch (err) {
         setError(err);
       } finally {
-        // Baris ini sekarang akan selalu berjalan setelah fetch selesai
         setIsLoading(false);
       }
     }
 
     fetchUpcomingAppointment();
-  }, []); // <-- Dependency array dikosongkan agar hanya berjalan sekali
+  }, []);
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);

@@ -1,5 +1,9 @@
 import React from "react";
-import { BookOpen } from "lucide-react"; // Ganti 'Google' menjadi 'BookOpen' atau logo Anda
+import { BookOpen } from "lucide-react";
+
+import { useState } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom"; // Ganti 'Google' menjadi 'BookOpen' atau logo Anda
 
 const styles = {
   loginContainer: {
@@ -54,6 +58,30 @@ const styles = {
 };
 
 function LoginPage() {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    try {
+      const res = await fetch("http://localhost:1337/api/auth/local", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || "Login gagal");
+      login(data.user, data.jwt);
+      navigate("/");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   return (
     <div style={styles.loginContainer}>
       <div style={styles.loginCard}>
@@ -62,18 +90,44 @@ function LoginPage() {
           <span style={styles.logoText}>Better-U</span>
         </div>
         <h1 style={styles.title}>Layanan Konseling Universitas Klabat</h1>
-        <a
-          href="http://localhost:1337/api/connect/google"
-          style={styles.googleButton}
-        >
-          <img
-            src="https://www.google.com/favicon.ico"
-            alt="Google icon"
-            width="20"
-            height="20"
-          />
-          <span>Sign in with UNKLAB Google Account</span>
-        </a>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: "1rem" }}>
+            <input
+              type="text"
+              placeholder="Email atau Username"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+              required
+            />
+          </div>
+          <div style={{ marginBottom: "1rem" }}>
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+              }}
+              required
+            />
+          </div>
+          {error && (
+            <div style={{ color: "red", marginBottom: "1rem" }}>{error}</div>
+          )}
+          <button type="submit" style={styles.googleButton}>
+            Login
+          </button>
+        </form>
       </div>
     </div>
   );

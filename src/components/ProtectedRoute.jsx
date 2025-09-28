@@ -1,17 +1,18 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-function ProtectedRoute({ children }) {
-  // Cek 'tanda pengenal' di localStorage
-  const isLoggedIn = localStorage.getItem("isLoggedIn");
+// Komponen ini membungkus halaman yang hanya boleh diakses user login
+export default function ProtectedRoute({ children, requiredRole }) {
+  const { user, loading } = useAuth();
 
-  if (!isLoggedIn) {
-    // Jika tidak ada 'tanda pengenal', tendang ke halaman login
+  if (loading) return null; // Atau tampilkan spinner
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
-
-  // Jika ada, tampilkan halaman yang diminta (children)
+  if (requiredRole && user.role && user.role.name !== requiredRole) {
+    // Jika role tidak sesuai, redirect ke halaman utama
+    return <Navigate to="/" replace />;
+  }
   return children;
 }
-
-export default ProtectedRoute;

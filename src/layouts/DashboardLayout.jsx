@@ -1,5 +1,6 @@
 import React from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const styles = {
   layout: {
@@ -48,48 +49,99 @@ const activeLinkStyle = {
 };
 
 function DashboardLayout({ children }) {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <div style={styles.layout}>
       <aside style={styles.sidebar}>
-        <h2 style={styles.sidebarTitle}>Better-U</h2>
-        <nav style={styles.nav}>
-          <NavLink
-            to="/"
-            style={({ isActive }) => ({
-              ...styles.navLink,
-              ...(isActive && activeLinkStyle),
-            })}
-          >
-            Dashboard
-          </NavLink>
-          <NavLink
-            to="/booking"
-            style={({ isActive }) => ({
-              ...styles.navLink,
-              ...(isActive && activeLinkStyle),
-            })}
-          >
-            Buat Janji
-          </NavLink>
-          <NavLink
-            to="/history"
-            style={({ isActive }) => ({
-              ...styles.navLink,
-              ...(isActive && activeLinkStyle),
-            })}
-          >
-            Riwayat
-          </NavLink>
-          <NavLink
-            to="/profile"
-            style={({ isActive }) => ({
-              ...styles.navLink,
-              ...(isActive && activeLinkStyle),
-            })}
-          >
-            Profil
-          </NavLink>
-        </nav>
+        <div>
+          <h2 style={styles.sidebarTitle}>Better-U</h2>
+          {/* Tampilkan nama dan role user */}
+          {user && (
+            <div style={{ textAlign: "center", marginBottom: 24 }}>
+              <div style={{ fontWeight: 600, fontSize: 16 }}>
+                {user.username || user.email}
+              </div>
+              <div style={{ fontSize: 13, color: "#cbd5e1" }}>
+                {user.role?.name
+                  ? user.role.name.charAt(0).toUpperCase() +
+                    user.role.name.slice(1)
+                  : ""}
+              </div>
+            </div>
+          )}
+          <nav style={styles.nav}>
+            <NavLink
+              to="/"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+              })}
+            >
+              Dashboard
+            </NavLink>
+            <NavLink
+              to="/booking"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+              })}
+            >
+              Buat Janji
+            </NavLink>
+            <NavLink
+              to="/my-schedule"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+              })}
+            >
+              Jadwal Saya
+            </NavLink>
+            <NavLink
+              to="/history"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+              })}
+            >
+              Riwayat
+            </NavLink>
+            <NavLink
+              to="/profile"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+              })}
+            >
+              Profil
+            </NavLink>
+          </nav>
+        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            marginTop: "auto",
+            width: "100%",
+            padding: "12px 0",
+            borderRadius: "8px",
+            border: "none",
+            backgroundColor: "#e53e3e",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: "1rem",
+            cursor: "pointer",
+            marginBottom: "12px",
+          }}
+        >
+          Logout
+        </button>
       </aside>
       <main style={styles.content}>{children}</main>
     </div>
