@@ -11,6 +11,8 @@ import AuthCallback from "./pages/AuthCallback.jsx";
 import { AuthProvider } from "./contexts/AuthContext";
 import MySchedulePage from "./pages/MySchedulePage.jsx";
 import CounselorDashboard from "./pages/counselor/CounselorDashboard";
+import RekamMedisPage from "./pages/counselor/RekamMedisPage";
+
 import StudentDashboard from "./pages/student/Dashboard";
 
 function App() {
@@ -86,6 +88,16 @@ function App() {
               <DashboardLayout>
                 <ProfilePage />
               </DashboardLayout>
+            }
+          />
+          <Route
+            path="/counselor/rekam-medis/:jadwalId"
+            element={
+              <ProtectedRoute requiredRole="counselor">
+                <DashboardLayout>
+                  <RekamMedisPage />
+                </DashboardLayout>
+              </ProtectedRoute>
             }
           />
         </Routes>

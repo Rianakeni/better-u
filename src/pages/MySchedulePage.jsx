@@ -50,67 +50,94 @@ function MySchedulePage() {
   const navigate = useNavigate();
   const { user, token } = useAuth();
 
+  // --- ASLI: Fetch dari API ---
+  // useEffect(() => {
+  //   if (!user || !token) {
+  //     setIsLoading(false);
+  //     return;
+  //   }
+  //   async function fetchSchedules() {
+  //     try {
+  //       const apiUrl = `http://localhost:1337/api/jadwal-availables?filters[klien][id][$eq]=${user.id}&filters[status][$eq]=dijadwalkan&sort=waktu_sesi:asc&populate=slot_jadwal`;
+  //       const response = await fetch(apiUrl, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       if (!response.ok) throw new Error("Gagal mengambil jadwal.");
+  //       const result = await response.json();
+  //       setSchedules(result.data);
+  //     } catch (err) {
+  //       // alert(err.message);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   }
+  //   fetchSchedules();
+  // }, [user, token]);
+
+  // --- MOCK DATA: Untuk pengembangan frontend tanpa API ---
   useEffect(() => {
-    if (!user || !token) {
+    setIsLoading(true);
+    // Data dummy jadwal
+    setTimeout(() => {
+      setSchedules([
+        {
+          id: 1,
+          waktu_sesi: "2025-10-02T09:00:00.000Z",
+          status: "di jadwalkan",
+          slot_jadwal: { id: 1 },
+        },
+        {
+          id: 2,
+          waktu_sesi: "2025-10-05T13:00:00.000Z",
+          status: "di jadwalkan",
+          slot_jadwal: { id: 2 },
+        },
+      ]);
       setIsLoading(false);
-      return;
-    }
-    async function fetchSchedules() {
-      try {
-        // Filter HANYA untuk jadwal yang akan datang, milik user login
-        const apiUrl = `http://localhost:1337/api/jadwal-availables?filters[klien][id][$eq]=${user.id}&filters[status][$eq]=dijadwalkan&sort=waktu_sesi:asc&populate=slot_jadwal`;
-        const response = await fetch(apiUrl, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error("Gagal mengambil jadwal.");
+    }, 500);
+  }, []);
 
-        const result = await response.json();
-        setSchedules(result.data);
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchSchedules();
-  }, [user, token]);
+  // --- ASLI: Fungsi reschedule ke API ---
+  // const handleReschedule = async (jadwalItem) => {
+  //   if (!jadwalItem.slot_jadwal) {
+  //     alert("Error: Data slot tidak ditemukan untuk jadwal ini.");
+  //     return;
+  //   }
+  //   if (
+  //     window.confirm(
+  //       "Anda yakin ingin mengubah jadwal ini? Jadwal lama Anda akan dibatalkan."
+  //     )
+  //   ) {
+  //     try {
+  //       await fetch(
+  //         `http://localhost:1337/api/jadwal-availables/${jadwalItem.id}`,
+  //         {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ data: { status: "dibatalkan" } }),
+  //         }
+  //       );
+  //       await fetch(
+  //         `http://localhost:1337/api/slot-jadwals/${jadwalItem.slot_jadwal.id}`,
+  //         {
+  //           method: "PUT",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ data: { status_slot: "tersedia" } }),
+  //         }
+  //       );
+  //       alert(
+  //         "Jadwal lama berhasil dibatalkan. Mengarahkan Anda untuk memilih jadwal baru..."
+  //       );
+  //       navigate("/booking");
+  //     } catch (error) {
+  //       alert("Gagal mengubah jadwal: " + error.message);
+  //     }
+  //   }
+  // };
 
-  const handleReschedule = async (jadwalItem) => {
-    // ... (salin fungsi handleReschedule dari HistoryPage.jsx Anda sebelumnya)
-    if (!jadwalItem.slot_jadwal) {
-      alert("Error: Data slot tidak ditemukan untuk jadwal ini.");
-      return;
-    }
-    if (
-      window.confirm(
-        "Anda yakin ingin mengubah jadwal ini? Jadwal lama Anda akan dibatalkan."
-      )
-    ) {
-      try {
-        await fetch(
-          `http://localhost:1337/api/jadwal-availables/${jadwalItem.id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: { status: "dibatalkan" } }),
-          }
-        );
-        await fetch(
-          `http://localhost:1337/api/slot-jadwals/${jadwalItem.slot_jadwal.id}`,
-          {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: { status_slot: "tersedia" } }),
-          }
-        );
-        alert(
-          "Jadwal lama berhasil dibatalkan. Mengarahkan Anda untuk memilih jadwal baru..."
-        );
-        navigate("/booking");
-      } catch (error) {
-        alert("Gagal mengubah jadwal: " + error.message);
-      }
-    }
+  // --- MOCK: Reschedule hanya redirect ---
+  const handleReschedule = (jadwalItem) => {
+    navigate("/booking");
   };
 
   const formatDateTime = (dateString) => {

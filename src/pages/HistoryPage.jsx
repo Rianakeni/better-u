@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { Link } from "react-router-dom";
 
 const styles = {
-  // ... (Anda bisa salin objek styles dari MySchedulePage.jsx, karena tampilannya mirip)
   title: {
     fontSize: "2rem",
     fontWeight: "700",
@@ -27,8 +28,8 @@ const styles = {
     color: "white",
     textTransform: "capitalize",
   },
-  statusCompleted: { backgroundColor: "#38a169" }, // Hijau
-  statusCancelled: { backgroundColor: "#e53e3e" }, // Merah
+  statusCompleted: { backgroundColor: "#38a169" },
+  statusCancelled: { backgroundColor: "#e53e3e" },
 };
 
 const getStatusStyle = (status) => {
@@ -40,24 +41,51 @@ const getStatusStyle = (status) => {
 function HistoryPage() {
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const mockUser = { id: 1 };
+  const { user, token } = useAuth();
 
+  // --- ASLI: Fetch dari API ---
+  // useEffect(() => {
+  //   if (!user || !token) {
+  //     setIsLoading(false);
+  //     return;
+  //   }
+  //   async function fetchHistory() {
+  //     try {
+  //       const apiUrl = `http://localhost:1337/api/jadwal-availables?filters[klien][id][$eq]=${user.id}&filters[status][$in][0]=selesai&filters[status][$in][1]=dibatalkan&sort=waktu_sesi:desc`;
+  //       const response = await fetch(apiUrl, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       if (!response.ok) throw new Error("Gagal mengambil riwayat.");
+  //       const result = await response.json();
+  //       setHistory(result.data);
+  //     } catch (err) {
+  //       // alert(err.message);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   }
+  //   fetchHistory();
+  // }, [user, token]);
+
+  // --- MOCK DATA: Untuk pengembangan frontend tanpa API ---
   useEffect(() => {
-    async function fetchHistory() {
-      try {
-        // Filter HANYA untuk jadwal yang sudah lewat
-        const apiUrl = `http://localhost:1337/api/jadwal-availables?filters[klien][id][$eq]=${mockUser.id}&filters[status][$in][0]=selesai&filters[status][$in][1]=dibatalkan&sort=waktu_sesi:desc`;
-        const response = await fetch(apiUrl);
-        if (!response.ok) throw new Error("Gagal mengambil riwayat.");
-        const result = await response.json();
-        setHistory(result.data);
-      } catch (err) {
-        alert(err.message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchHistory();
+    setIsLoading(true);
+    setTimeout(() => {
+      setHistory([
+        {
+          id: 1,
+          waktu_sesi: "2025-09-10T09:00:00.000Z",
+          status: "selesai",
+          rekam_medis: true, // Simulasi sudah ada rekam medis
+        },
+        {
+          id: 2,
+          waktu_sesi: "2025-08-20T13:00:00.000Z",
+          status: "dibatalkan",
+        },
+      ]);
+      setIsLoading(false);
+    }, 500);
   }, []);
 
   const formatDateTime = (dateString) => {
@@ -82,6 +110,9 @@ function HistoryPage() {
         <div style={styles.historyList}>
           {history.map((item) => {
             const { date, time } = formatDateTime(item.waktu_sesi);
+            // Simulasi: jika sudah ada rekam medis, tampilkan tombol Edit, jika belum, Isi
+            // Nanti bisa diganti dengan pengecekan field rekam medis dari API
+            const rekamMedisSudahAda = !!item.rekam_medis; // mock, ganti sesuai data asli
             return (
               <div key={item.id} style={styles.historyCard}>
                 <div style={styles.details}>
@@ -95,8 +126,33 @@ function HistoryPage() {
                   >
                     {item.status}
                   </span>
+                  {/* Tombol hanya untuk konselor dan status selesai, selalu tampil di bawah status */}
+                  {user?.role?.name === "counselor" &&
+                    item.status === "selesai" && (
+                      <Link
+                        to={`/counselor/rekam-medis/${item.id}`}
+                        style={{
+                          marginTop: 20,
+                          display: "block",
+                          background: rekamMedisSudahAda
+                            ? "#3182ce"
+                            : "#38a169",
+                          color: "white",
+                          padding: "12px 0",
+                          borderRadius: 6,
+                          textAlign: "center",
+                          textDecoration: "none",
+                          fontWeight: 600,
+                          fontSize: "1rem",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {rekamMedisSudahAda
+                          ? "Edit Rekam Medis"
+                          : "Isi Rekam Medis"}
+                      </Link>
+                    )}
                 </div>
-                {/* TIDAK ADA TOMBOL AKSI DI SINI */}
               </div>
             );
           })}

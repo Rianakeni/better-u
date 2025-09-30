@@ -123,6 +123,19 @@ function DashboardLayout({ children }) {
               Profil
             </NavLink>
           </nav>
+          {/* Menu Rekam Medis khusus konselor, letakkan di luar nav agar selalu muncul di sidebar konselor */}
+          {user?.role?.name === "counselor" && (
+            <NavLink
+              to="/counselor/rekam-medis/1"
+              style={({ isActive }) => ({
+                ...styles.navLink,
+                ...(isActive && activeLinkStyle),
+                marginTop: 12,
+              })}
+            >
+              Rekam Medis
+            </NavLink>
+          )}
         </div>
         <button
           onClick={handleLogout}

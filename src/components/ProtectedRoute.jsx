@@ -6,7 +6,20 @@ import { useAuth } from "../contexts/AuthContext";
 export default function ProtectedRoute({ children, requiredRole }) {
   const { user, loading } = useAuth();
 
-  if (loading) return null; // Atau tampilkan spinner
+  if (loading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <div style={{ fontSize: 24, color: "#888" }}>Loading...</div>
+      </div>
+    );
+  }
   if (!user) {
     return <Navigate to="/login" replace />;
   }

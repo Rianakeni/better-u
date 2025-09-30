@@ -85,8 +85,8 @@ function DashboardPage() {
       const now = new Date().toISOString();
       const apiUrl =
         `http://localhost:1337/api/jadwal-availables?` +
-        `filters[klien][id][$eq]=${userData.id}` +
-        `&filters[status][$eq]=dijadwalkan` +
+        `filters[mahasiswa][id][$eq]=${userData.id}` +
+        `&filters[status_jadwal][$eq]=di%20jadwalkan` +
         `&filters[waktu_sesi][$gte]=${now}` +
         `&sort=waktu_sesi:asc` +
         `&pagination[limit]=1`;

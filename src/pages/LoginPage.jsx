@@ -76,7 +76,14 @@ function LoginPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error?.message || "Login gagal");
       login(data.user, data.jwt);
-      navigate("/");
+      // Redirect ke dashboard sesuai role
+      if (data.user.role && data.user.role.name === "counselor") {
+        navigate("/counselor/dashboard");
+      } else if (data.user.role && data.user.role.name === "student") {
+        navigate("/student/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       setError(err.message);
     }
