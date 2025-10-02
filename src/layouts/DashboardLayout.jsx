@@ -1,52 +1,114 @@
 import React from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  LogOut,
+  LayoutDashboard,
+  CalendarPlus,
+  CalendarClock,
+  History,
+  User,
+} from "lucide-react";
 
 const styles = {
   layout: {
     display: "flex",
     minHeight: "100vh",
-    fontFamily: "sans-serif",
+    fontFamily: "system-ui, sans-serif",
   },
   sidebar: {
-    width: "250px",
-    backgroundColor: "#1a202c", // Sidebar gelap
-    color: "white",
+    width: "280px",
+    backgroundColor: "#90EE90", // Warna hijau terang dari desain
+    color: "#000000",
     padding: "24px",
     display: "flex",
     flexDirection: "column",
+    justifyContent: "space-between",
+    borderRight: "1px solid #e0e0e0",
   },
-  sidebarTitle: {
-    fontSize: "24px",
-    fontWeight: "bold",
-    marginBottom: "40px",
-    textAlign: "center",
+  profileSection: { textAlign: "center", marginBottom: "40px" },
+  avatar: {
+    width: "100px",
+    height: "100px",
+    borderRadius: "50%",
+    backgroundColor: "#e0e0e0",
+    margin: "0 auto 16px auto",
+    objectFit: "cover",
+    border: "3px solid white",
   },
-  nav: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-  },
+  profileName: { fontWeight: "bold", fontSize: "1.1rem" },
+  profileInfo: { fontSize: "0.9rem", color: "#555" },
+  nav: { display: "flex", flexDirection: "column", gap: "8px" },
   navLink: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
     textDecoration: "none",
-    color: "#a0aec0", // Teks abu-abu
+    color: "#333",
     padding: "12px 16px",
     borderRadius: "8px",
     transition: "background-color 0.2s, color 0.2s",
+    fontWeight: "500",
   },
-  // Style untuk link yang sedang aktif akan ditangani oleh NavLink
+  logoutButton: {
+    background: "#ff4d4d",
+    border: "none",
+    color: "white",
+    padding: "12px 16px",
+    borderRadius: "8px",
+    width: "100%",
+    textAlign: "center",
+    cursor: "pointer",
+    fontWeight: "bold",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+  },
   content: {
     flex: 1,
-    padding: "40px",
-    backgroundColor: "#f7fafc", // Latar konten abu-abu terang
+    padding: "40px 50px",
+    backgroundColor: "#ffffff",
+    overflowY: "auto",
   },
 };
 
-// Style untuk link yang aktif
+// Style untuk link yang sedang aktif
 const activeLinkStyle = {
-  backgroundColor: "#2d3748",
-  color: "white",
+  backgroundColor: "#ffffff",
+  color: "#000000",
+  fontWeight: "bold",
 };
+
+// Definisikan menu untuk setiap peran
+const studentMenu = [
+  {
+    path: "/student/dashboard",
+    label: "Dashboard",
+    icon: <LayoutDashboard size={20} />,
+  },
+  {
+    path: "/booking",
+    label: "Booking Janji",
+    icon: <CalendarPlus size={20} />,
+  },
+  {
+    path: "/my-schedule",
+    label: "Jadwal Anda",
+    icon: <CalendarClock size={20} />,
+  },
+  { path: "/history", label: "Riwayat", icon: <History size={20} /> },
+  { path: "/profile", label: "Profil", icon: <User size={20} /> },
+];
+
+const counselorMenu = [
+  {
+    path: "/counselor/dashboard",
+    label: "Dashboard",
+    icon: <LayoutDashboard size={20} />,
+  },
+  // Nanti kita tambahkan link untuk halaman lain konselor
+];
 
 function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
@@ -57,103 +119,45 @@ function DashboardLayout({ children }) {
     navigate("/login");
   };
 
+  // Pilih menu yang benar berdasarkan peran pengguna
+  const menuItems =
+    user?.role?.name === "counselor" ? counselorMenu : studentMenu;
+
   return (
     <div style={styles.layout}>
       <aside style={styles.sidebar}>
         <div>
-          <h2 style={styles.sidebarTitle}>Better-U</h2>
-          {/* Tampilkan nama dan role user */}
-          {user && (
-            <div style={{ textAlign: "center", marginBottom: 24 }}>
-              <div style={{ fontWeight: 600, fontSize: 16 }}>
-                {user.username || user.email}
-              </div>
-              <div style={{ fontSize: 13, color: "#cbd5e1" }}>
-                {user.role?.name
-                  ? user.role.name.charAt(0).toUpperCase() +
-                    user.role.name.slice(1)
-                  : ""}
-              </div>
+          <div style={styles.profileSection}>
+            {/* Tampilkan data dari AuthContext */}
+            <img
+              src={"https://via.placeholder.com/100"}
+              alt="Profile"
+              style={styles.avatar}
+            />
+            <div style={styles.profileName}>
+              {user?.nama_lengkap || user?.username || "User"}
             </div>
-          )}
+            <div style={styles.profileInfo}>{user?.nim || user?.email}</div>
+          </div>
           <nav style={styles.nav}>
-            <NavLink
-              to="/"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-              })}
-            >
-              Dashboard
-            </NavLink>
-            <NavLink
-              to="/booking"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-              })}
-            >
-              Buat Janji
-            </NavLink>
-            <NavLink
-              to="/my-schedule"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-              })}
-            >
-              Jadwal Saya
-            </NavLink>
-            <NavLink
-              to="/history"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-              })}
-            >
-              Riwayat
-            </NavLink>
-            <NavLink
-              to="/profile"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-              })}
-            >
-              Profil
-            </NavLink>
+            {menuItems.map((item) => (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                style={({ isActive }) => ({
+                  ...styles.navLink,
+                  ...(isActive && activeLinkStyle),
+                })}
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </NavLink>
+            ))}
           </nav>
-          {/* Menu Rekam Medis khusus konselor, letakkan di luar nav agar selalu muncul di sidebar konselor */}
-          {user?.role?.name === "counselor" && (
-            <NavLink
-              to="/counselor/rekam-medis/1"
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive && activeLinkStyle),
-                marginTop: 12,
-              })}
-            >
-              Rekam Medis
-            </NavLink>
-          )}
         </div>
-        <button
-          onClick={handleLogout}
-          style={{
-            marginTop: "auto",
-            width: "100%",
-            padding: "12px 0",
-            borderRadius: "8px",
-            border: "none",
-            backgroundColor: "#e53e3e",
-            color: "white",
-            fontWeight: "bold",
-            fontSize: "1rem",
-            cursor: "pointer",
-            marginBottom: "12px",
-          }}
-        >
-          Logout
+        <button onClick={handleLogout} style={styles.logoutButton}>
+          <LogOut size={18} />
+          <span>Log out</span>
         </button>
       </aside>
       <main style={styles.content}>{children}</main>

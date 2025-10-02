@@ -12,7 +12,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import MySchedulePage from "./pages/MySchedulePage.jsx";
 import CounselorDashboard from "./pages/counselor/CounselorDashboard";
 import RekamMedisPage from "./pages/counselor/RekamMedisPage";
-
 import StudentDashboard from "./pages/student/Dashboard";
 
 function App() {
