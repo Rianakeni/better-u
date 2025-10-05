@@ -1,47 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
-
-const styles = {
-  title: {
-    fontSize: "2rem",
-    fontWeight: "700",
-    color: "#1a202c",
-    marginBottom: "2rem",
-  },
-  historyList: { display: "flex", flexDirection: "column", gap: "1rem" },
-  historyCard: {
-    backgroundColor: "white",
-    padding: "1.5rem",
-    borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    border: "1px solid #e2e8f0",
-  },
-  details: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  date: { fontSize: "1.125rem", fontWeight: "600", color: "#2d3748" },
-  time: { fontSize: "1rem", color: "#4a5568" },
-  statusBadge: {
-    padding: "4px 12px",
-    borderRadius: "9999px",
-    fontSize: "0.875rem",
-    fontWeight: "600",
-    color: "white",
-    textTransform: "capitalize",
-  },
-  statusCompleted: { backgroundColor: "#38a169" },
-  statusCancelled: { backgroundColor: "#e53e3e" },
-};
-
-const getStatusStyle = (status) => {
-  if (status === "selesai") return styles.statusCompleted;
-  if (status === "dibatalkan") return styles.statusCancelled;
-  return {};
-};
+import React, { useState } from "react";
+import useWindowSize from "../hooks/useWindowSize"; // Pastikan hook ini ada
+import { Calendar, Clock, Download, User } from "lucide-react";
 
 function HistoryPage() {
-  const [history, setHistory] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, token } = useAuth();
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
 
   // --- ASLI: Fetch dari API ---
   // useEffect(() => {
@@ -67,95 +30,150 @@ function HistoryPage() {
   //   fetchHistory();
   // }, [user, token]);
 
-  // --- MOCK DATA: Untuk pengembangan frontend tanpa API ---
-  useEffect(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setHistory([
-        {
-          id: 1,
-          waktu_sesi: "2025-09-10T09:00:00.000Z",
-          status: "selesai",
-          rekam_medis: true, // Simulasi sudah ada rekam medis
-        },
-        {
-          id: 2,
-          waktu_sesi: "2025-08-20T13:00:00.000Z",
-          status: "dibatalkan",
-        },
-      ]);
-      setIsLoading(false);
-    }, 500);
-  }, []);
+  // --- MOCK DATA ---
+  const [history] = useState([
+    {
+      id: 1,
+      date: "Rabu, 1 Oktober 2025",
+      time: "10.10 - 11.30",
+      counselor: "dr. konselor 1",
+      medicalRecord:
+        "Ini adalah contoh rekam medis untuk sesi tanggal 1 Oktober 2025.\n\nPermasalahan: Mahasiswa merasa cemas menghadapi ujian akhir.\nDiagnosa: Gangguan kecemasan umum (ringan).\nRekomendasi: Latihan teknik relaksasi pernapasan dan manajemen waktu.",
+    },
+    {
+      id: 2,
+      date: "Rabu, 1 Oktober 2025",
+      time: "10.10 - 11.30",
+      counselor: "dr. konselor 1",
+      medicalRecord:
+        "Ini adalah contoh rekam medis kedua.\n\nPermasalahan: Kesulitan fokus saat belajar.",
+    },
+  ]);
 
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString("id-ID", { dateStyle: "full" }),
-      time: date.toLocaleTimeString("id-ID", { timeStyle: "short" }),
-    };
+  const handleDownload = (recordText, date) => {
+    // Membuat file teks tiruan untuk diunduh
+    const blob = new Blob([recordText], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rekam-medis-${date
+      .replace(/, /g, "-")
+      .replace(/ /g, "-")}.txt`; // Membuat nama file dinamis
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
-  if (isLoading) return <p>Memuat riwayat...</p>;
+  const styles = {
+    pageContainer: {
+      fontFamily: "sans-serif",
+      backgroundColor: "#ffffff",
+      padding: "2rem",
+      borderRadius: "8px",
+    },
+    header: {
+      marginBottom: "2.5rem",
+    },
+    title: {
+      fontSize: "2.5rem",
+      fontWeight: "700",
+      color: "#1a202c",
+      marginBottom: "0.5rem",
+    },
+    subtitle: {
+      fontSize: "1rem",
+      color: "#6b7280",
+      maxWidth: "600px",
+    },
+    historyGrid: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+      gap: "1.5rem",
+    },
+    historyCard: {
+      backgroundColor: "#f1f3f5", // Warna abu-abu dari UI
+      borderRadius: "12px",
+      padding: "1.5rem",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.75rem",
+    },
+    detailRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      fontSize: "0.9rem",
+      color: "#495057",
+    },
+    cardFooter: {
+      marginTop: "auto",
+      paddingTop: "1rem",
+      display: "flex",
+      justifyContent: "flex-end",
+      alignItems: "center",
+    },
+    downloadButton: {
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.5rem 1rem",
+      fontSize: "0.8rem",
+      fontWeight: "500",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      gap: "0.4rem",
+    },
+    emptyState: {
+      textAlign: "center",
+      padding: "3rem 2rem",
+      color: "#6b7280",
+    },
+  };
 
   return (
-    <div>
-      <h1 style={styles.title}>Riwayat Arsip Konsultasi</h1>
-      {history.length === 0 ? (
-        <p>
-          Anda belum memiliki riwayat konsultasi yang telah selesai atau
-          dibatalkan.
+    <div style={styles.pageContainer}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Riwayat Konseling</h1>
+        <p style={styles.subtitle}>
+          Halaman ini menampilkan riwayat sesi konselingmu. Gunakan informasi
+          ini untuk melihat kembali jadwal, topik, dan catatan dari setiap
+          pertemuan.
         </p>
+      </div>
+
+      {history.length === 0 ? (
+        <p style={styles.emptyState}>Anda belum memiliki riwayat konsultasi.</p>
       ) : (
-        <div style={styles.historyList}>
-          {history.map((item) => {
-            const { date, time } = formatDateTime(item.waktu_sesi);
-            // Simulasi: jika sudah ada rekam medis, tampilkan tombol Edit, jika belum, Isi
-            // Nanti bisa diganti dengan pengecekan field rekam medis dari API
-            const rekamMedisSudahAda = !!item.rekam_medis; // mock, ganti sesuai data asli
-            return (
-              <div key={item.id} style={styles.historyCard}>
-                <div style={styles.details}>
-                  <p style={styles.date}>{date}</p>
-                  <p style={styles.time}>Pukul: {time}</p>
-                  <span
-                    style={{
-                      ...styles.statusBadge,
-                      ...getStatusStyle(item.status),
-                    }}
-                  >
-                    {item.status}
-                  </span>
-                  {/* Tombol hanya untuk konselor dan status selesai, selalu tampil di bawah status */}
-                  {user?.role?.name === "counselor" &&
-                    item.status === "selesai" && (
-                      <Link
-                        to={`/counselor/rekam-medis/${item.id}`}
-                        style={{
-                          marginTop: 20,
-                          display: "block",
-                          background: rekamMedisSudahAda
-                            ? "#3182ce"
-                            : "#38a169",
-                          color: "white",
-                          padding: "12px 0",
-                          borderRadius: 6,
-                          textAlign: "center",
-                          textDecoration: "none",
-                          fontWeight: 600,
-                          fontSize: "1rem",
-                          letterSpacing: 0.5,
-                        }}
-                      >
-                        {rekamMedisSudahAda
-                          ? "Edit Rekam Medis"
-                          : "Isi Rekam Medis"}
-                      </Link>
-                    )}
-                </div>
+        <div style={styles.historyGrid}>
+          {history.map((item) => (
+            <div key={item.id} style={styles.historyCard}>
+              <div style={styles.detailRow}>
+                <Calendar size={16} />
+                <span>{item.date}</span>
               </div>
-            );
-          })}
+              <div style={styles.detailRow}>
+                <Clock size={16} />
+                <span>{item.time}</span>
+              </div>
+              <div style={styles.detailRow}>
+                <User size={16} />
+                <span>{item.counselor}</span>
+              </div>
+              <div style={styles.cardFooter}>
+                <button
+                  style={styles.downloadButton}
+                  onClick={() => handleDownload(item.medicalRecord, item.date)}
+                >
+                  <Download size={14} />
+                  Download rekam medis
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>

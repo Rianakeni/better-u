@@ -1,183 +1,165 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-
-const styles = {
-  // ... (salin objek styles dari HistoryPage.jsx Anda sebelumnya)
-  title: {
-    fontSize: "2rem",
-    fontWeight: "700",
-    color: "#1a202c",
-    marginBottom: "2rem",
-  },
-  scheduleList: { display: "flex", flexDirection: "column", gap: "1rem" },
-  scheduleCard: {
-    backgroundColor: "white",
-    padding: "1.5rem",
-    borderRadius: "8px",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    border: "1px solid #e2e8f0",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  details: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  date: { fontSize: "1.125rem", fontWeight: "600", color: "#2d3748" },
-  time: { fontSize: "1rem", color: "#4a5568" },
-  statusBadge: {
-    padding: "4px 12px",
-    borderRadius: "9999px",
-    fontSize: "0.875rem",
-    fontWeight: "600",
-    color: "white",
-    textTransform: "capitalize",
-  },
-  statusScheduled: { backgroundColor: "#3182ce" },
-  actions: { display: "flex", gap: "0.5rem" },
-  button: {
-    padding: "8px 16px",
-    borderRadius: "8px",
-    border: "1px solid #cbd5e0",
-    backgroundColor: "transparent",
-    cursor: "pointer",
-    fontWeight: "500",
-  },
-};
+import useWindowSize from "../hooks/useWindowSize";
+import { Calendar, Clock, User } from "lucide-react";
 
 function MySchedulePage() {
-  const [schedules, setSchedules] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
-  const { user, token } = useAuth();
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
 
-  // --- ASLI: Fetch dari API ---
-  // useEffect(() => {
-  //   if (!user || !token) {
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   async function fetchSchedules() {
-  //     try {
-  //       const apiUrl = `http://localhost:1337/api/jadwal-availables?filters[klien][id][$eq]=${user.id}&filters[status][$eq]=dijadwalkan&sort=waktu_sesi:asc&populate=slot_jadwal`;
-  //       const response = await fetch(apiUrl, {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       });
-  //       if (!response.ok) throw new Error("Gagal mengambil jadwal.");
-  //       const result = await response.json();
-  //       setSchedules(result.data);
-  //     } catch (err) {
-  //       // alert(err.message);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  //   fetchSchedules();
-  // }, [user, token]);
+  // --- MOCK DATA ---
+  const [schedules] = useState([
+    {
+      id: 1,
+      date: "Rabu, 1 Oktober 2025",
+      time: "10.10 - 11.30",
+      counselor: "dr. konselor 1",
+      status: "di jadwalkan",
+    },
+    {
+      id: 2,
+      date: "Rabu, 1 Oktober 2025",
+      time: "10.10 - 11.30",
+      counselor: "dr. konselor 1",
+      status: "di batalkan",
+    },
+    // Anda bisa menambahkan data jadwal lainnya di sini
+  ]);
 
-  // --- MOCK DATA: Untuk pengembangan frontend tanpa API ---
-  useEffect(() => {
-    setIsLoading(true);
-    // Data dummy jadwal
-    setTimeout(() => {
-      setSchedules([
-        {
-          id: 1,
-          waktu_sesi: "2025-10-02T09:00:00.000Z",
-          status: "di jadwalkan",
-          slot_jadwal: { id: 1 },
-        },
-        {
-          id: 2,
-          waktu_sesi: "2025-10-05T13:00:00.000Z",
-          status: "di jadwalkan",
-          slot_jadwal: { id: 2 },
-        },
-      ]);
-      setIsLoading(false);
-    }, 500);
-  }, []);
-
-  // --- ASLI: Fungsi reschedule ke API ---
-  // const handleReschedule = async (jadwalItem) => {
-  //   if (!jadwalItem.slot_jadwal) {
-  //     alert("Error: Data slot tidak ditemukan untuk jadwal ini.");
-  //     return;
-  //   }
-  //   if (
-  //     window.confirm(
-  //       "Anda yakin ingin mengubah jadwal ini? Jadwal lama Anda akan dibatalkan."
-  //     )
-  //   ) {
-  //     try {
-  //       await fetch(
-  //         `http://localhost:1337/api/jadwal-availables/${jadwalItem.id}`,
-  //         {
-  //           method: "PUT",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({ data: { status: "dibatalkan" } }),
-  //         }
-  //       );
-  //       await fetch(
-  //         `http://localhost:1337/api/slot-jadwals/${jadwalItem.slot_jadwal.id}`,
-  //         {
-  //           method: "PUT",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({ data: { status_slot: "tersedia" } }),
-  //         }
-  //       );
-  //       alert(
-  //         "Jadwal lama berhasil dibatalkan. Mengarahkan Anda untuk memilih jadwal baru..."
-  //       );
-  //       navigate("/booking");
-  //     } catch (error) {
-  //       alert("Gagal mengubah jadwal: " + error.message);
-  //     }
-  //   }
-  // };
-
-  // --- MOCK: Reschedule hanya redirect ---
-  const handleReschedule = (jadwalItem) => {
-    navigate("/booking");
+  const handleReschedule = () => {
+    if (
+      window.confirm(
+        "Apakah Anda yakin ingin mengubah jadwal? Jadwal lama Anda akan dibatalkan dan Anda akan diarahkan ke halaman booking."
+      )
+    ) {
+      navigate("/booking");
+    }
   };
 
-  const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString("id-ID", { dateStyle: "full" }),
-      time: date.toLocaleTimeString("id-ID", { timeStyle: "short" }),
-    };
+  const styles = {
+    pageContainer: {
+      fontFamily: "sans-serif",
+      backgroundColor: "#ffffff",
+      padding: "2rem",
+      borderRadius: "8px",
+    },
+    header: {
+      marginBottom: "2.5rem",
+    },
+    title: {
+      fontSize: "2.5rem",
+      fontWeight: "700",
+      color: "#1a202c",
+      marginBottom: "0.5rem",
+    },
+    subtitle: {
+      fontSize: "1rem",
+      color: "#6b7280",
+      maxWidth: "600px",
+    },
+    scheduleGrid: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+      gap: "1.5rem",
+    },
+    scheduleCard: {
+      backgroundColor: "#d1fae5",
+      borderRadius: "12px",
+      padding: "1.5rem",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+      position: "relative",
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.75rem",
+      color: "#064e3b",
+      minHeight: "120px",
+    },
+    detailRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      fontSize: "0.9rem",
+    },
+    statusBadge: {
+      position: "absolute",
+      top: "1.5rem",
+      right: "1.5rem",
+      padding: "0.25rem 0.75rem",
+      borderRadius: "9999px",
+      fontSize: "0.75rem",
+      fontWeight: "600",
+      color: "white",
+      textTransform: "capitalize",
+    },
+    statusScheduled: {
+      backgroundColor: "#f59e0b", // Kuning
+    },
+    statusCancelled: {
+      backgroundColor: "#ef4444", // Merah
+    },
+    actionButton: {
+      position: "absolute",
+      bottom: "1.5rem",
+      right: "1.5rem",
+      backgroundColor: "#3b82f6",
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.5rem 1rem",
+      fontSize: "0.8rem",
+      fontWeight: "500",
+      cursor: "pointer",
+    },
+    emptyState: {
+      textAlign: "center",
+      padding: "3rem 2rem",
+      color: "#6b7280",
+    },
   };
-
-  if (isLoading) return <p>Memuat jadwal Anda...</p>;
 
   return (
-    <div>
-      <h1 style={styles.title}>Jadwal Saya</h1>
+    <div style={styles.pageContainer}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Jadwal Saya</h1>
+        <p style={styles.subtitle}>
+          Kelola dan pantau jadwal konselingmu dengan mudah di sini. Pastikan
+          setiap sesi sesuai dengan kebutuhan dan waktu yang kamu inginkan.
+        </p>
+      </div>
+
       {schedules.length === 0 ? (
-        <p>Anda belum memiliki jadwal konsultasi yang akan datang.</p>
+        <p style={styles.emptyState}>Anda belum memiliki jadwal konsultasi.</p>
       ) : (
-        <div style={styles.scheduleList}>
+        <div style={styles.scheduleGrid}>
           {schedules.map((item) => {
-            const { date, time } = formatDateTime(item.waktu_sesi);
+            const statusStyle =
+              item.status === "di batalkan"
+                ? styles.statusCancelled
+                : styles.statusScheduled;
+
             return (
               <div key={item.id} style={styles.scheduleCard}>
-                <div style={styles.details}>
-                  <p style={styles.date}>{date}</p>
-                  <p style={styles.time}>Pukul: {time}</p>
-                  <span
-                    style={{ ...styles.statusBadge, ...styles.statusScheduled }}
-                  >
-                    {item.status}
-                  </span>
+                <span style={{ ...styles.statusBadge, ...statusStyle }}>
+                  {item.status}
+                </span>
+
+                <div style={styles.detailRow}>
+                  <Calendar size={16} />
+                  <span>{item.date}</span>
                 </div>
-                <div style={styles.actions}>
-                  <button
-                    onClick={() => handleReschedule(item)}
-                    style={styles.button}
-                  >
-                    Ubah Jadwal
-                  </button>
+                <div style={styles.detailRow}>
+                  <Clock size={16} />
+                  <span>{item.time}</span>
                 </div>
+                <div style={{ ...styles.detailRow, marginTop: "0.5rem" }}>
+                  <User size={16} />
+                  <span>{item.counselor}</span>
+                </div>
+
+                <button style={styles.actionButton} onClick={handleReschedule}>
+                  Ubah Jadwal
+                </button>
               </div>
             );
           })}
