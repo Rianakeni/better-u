@@ -10,68 +10,7 @@ import {
   User,
 } from "lucide-react";
 
-const styles = {
-  layout: {
-    display: "flex",
-    minHeight: "100vh",
-    fontFamily: "system-ui, sans-serif",
-  },
-  sidebar: {
-    width: "280px",
-    backgroundColor: "#90EE90", // Warna hijau terang dari desain
-    color: "#000000",
-    padding: "24px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    borderRight: "1px solid #e0e0e0",
-  },
-  profileSection: { textAlign: "center", marginBottom: "40px" },
-  avatar: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
-    backgroundColor: "#e0e0e0",
-    margin: "0 auto 16px auto",
-    objectFit: "cover",
-    border: "3px solid white",
-  },
-  profileName: { fontWeight: "bold", fontSize: "1.1rem" },
-  profileInfo: { fontSize: "0.9rem", color: "#555" },
-  nav: { display: "flex", flexDirection: "column", gap: "8px" },
-  navLink: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    textDecoration: "none",
-    color: "#333",
-    padding: "12px 16px",
-    borderRadius: "8px",
-    transition: "background-color 0.2s, color 0.2s",
-    fontWeight: "500",
-  },
-  logoutButton: {
-    background: "#ff4d4d",
-    border: "none",
-    color: "white",
-    padding: "12px 16px",
-    borderRadius: "8px",
-    width: "100%",
-    textAlign: "center",
-    cursor: "pointer",
-    fontWeight: "bold",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  },
-  content: {
-    flex: 1,
-    padding: "40px 50px",
-    backgroundColor: "#ffffff",
-    overflowY: "auto",
-  },
-};
+import useWindowSize from "../hooks/useWindowSize";
 
 // Style untuk link yang sedang aktif
 const activeLinkStyle = {
@@ -113,6 +52,71 @@ const counselorMenu = [
 function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { width } = useWindowSize(); // Tambahkan ini
+  const isMobile = width < 768; //
+
+  const styles = {
+    layout: (isMobile) => ({
+      display: "flex",
+      flexDirection: isMobile ? "column" : "row", // Berubah saat mobile
+      minHeight: "100vh",
+      fontFamily: "sans-serif",
+    }),
+    sidebar: (isMobile) => ({
+      width: isMobile ? "100%" : "250px", // Berubah saat mobile
+      padding: "24px",
+      padding: "24px",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+      borderRight: "1px solid #e0e0e0",
+    }),
+    profileSection: { textAlign: "center", marginBottom: "40px" },
+    avatar: {
+      width: "100px",
+      height: "100px",
+      borderRadius: "50%",
+      backgroundColor: "#e0e0e0",
+      margin: "0 auto 16px auto",
+      objectFit: "cover",
+      border: "3px solid white",
+    },
+    profileName: { fontWeight: "bold", fontSize: "1.1rem" },
+    profileInfo: { fontSize: "0.9rem", color: "#555" },
+    nav: { display: "flex", flexDirection: "column", gap: "8px" },
+    navLink: {
+      display: "flex",
+      alignItems: "center",
+      gap: "12px",
+      textDecoration: "none",
+      color: "#333",
+      padding: "12px 16px",
+      borderRadius: "8px",
+      transition: "background-color 0.2s, color 0.2s",
+      fontWeight: "500",
+    },
+    logoutButton: {
+      background: "#ff4d4d",
+      border: "none",
+      color: "white",
+      padding: "12px 16px",
+      borderRadius: "8px",
+      width: "100%",
+      textAlign: "center",
+      cursor: "pointer",
+      fontWeight: "bold",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: "8px",
+    },
+    content: {
+      flex: 1,
+      padding: isMobile ? "20px" : "40px",
+      backgroundColor: "#ffffff",
+      overflowY: "auto",
+    },
+  };
 
   const handleLogout = () => {
     logout();
@@ -124,8 +128,8 @@ function DashboardLayout({ children }) {
     user?.role?.name === "counselor" ? counselorMenu : studentMenu;
 
   return (
-    <div style={styles.layout}>
-      <aside style={styles.sidebar}>
+    <div style={styles.layout(isMobile)}>
+      <aside style={styles.sidebar(isMobile)}>
         <div>
           <div style={styles.profileSection}>
             {/* Tampilkan data dari AuthContext */}

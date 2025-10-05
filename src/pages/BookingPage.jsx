@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Calendar, Clock, User, Check } from "lucide-react";
+import useWindowSize from "../hooks/useWindowSize";
 
 const colors = {
   primary: { 300: "#90cdf4", 500: "#3182ce" },
@@ -15,112 +16,6 @@ const colors = {
   primaryBg: "#ebf8ff",
 };
 
-const styles = {
-  // ... (semua style lainnya tetap sama)
-  pageHeader: { textAlign: "center", marginBottom: "3rem" },
-  pageTitle: {
-    fontSize: "2rem",
-    fontWeight: "700",
-    color: colors.gray[900],
-    marginBottom: "0.5rem",
-  },
-  pageSubtitle: { color: colors.gray[600], fontSize: "1.125rem" },
-  slotsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-    gap: "1.5rem",
-    marginBottom: "2rem",
-  },
-  slotCard: {
-    backgroundColor: colors.white,
-    padding: "24px",
-    borderRadius: "8px",
-    border: `2px solid transparent`,
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    cursor: "pointer",
-    transition: "all 0.2s ease-in-out",
-  },
-  slotCardHover: {
-    transform: "translateY(-2px)",
-    borderColor: colors.primary[300],
-  },
-  slotCardSelected: {
-    borderColor: colors.primary[500],
-    backgroundColor: colors.primaryBg,
-  },
-  slotHeader: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "1rem",
-  },
-  serviceType: {
-    fontWeight: "600",
-    color: colors.gray[900],
-    fontSize: "1.125rem",
-  },
-  selectedIcon: { color: colors.primary[500] },
-  slotDetails: { display: "flex", flexDirection: "column", gap: "0.75rem" },
-  slotDetail: {
-    display: "flex",
-    alignItems: "center",
-    gap: "0.5rem",
-    color: colors.gray[600],
-  },
-  slotDetailIcon: { width: "16px", height: "16px", color: colors.gray[500] },
-  slotDetailText: { fontSize: "0.875rem" },
-  bookingForm: {
-    marginTop: "2rem",
-    backgroundColor: colors.white,
-    padding: "24px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-  },
-  formTitle: {
-    fontSize: "1.25rem",
-    fontWeight: "600",
-    color: colors.gray[900],
-    marginBottom: "1.5rem",
-  },
-  label: {
-    display: "block",
-    marginBottom: "0.5rem",
-    fontWeight: "500",
-    color: "#4a5568",
-  },
-  textArea: {
-    width: "100%",
-    padding: "0.75rem",
-    border: `1px solid ${colors.gray[200]}`,
-    borderRadius: "8px",
-    fontSize: "1rem",
-    fontFamily: "inherit",
-    resize: "vertical",
-    minHeight: "100px",
-  },
-  button: {
-    padding: "12px 24px",
-    borderRadius: "8px",
-    border: "none",
-    fontSize: "1rem",
-    fontWeight: "600",
-    cursor: "pointer",
-    transition: "background-color 0.2s ease-in-out",
-  },
-  confirmButton: { backgroundColor: colors.primary[500], color: colors.white },
-  cancelButton: {
-    backgroundColor: "transparent",
-    color: colors.gray[700],
-    border: `1px solid ${colors.gray[200]}`,
-  },
-  buttonDisabled: { backgroundColor: colors.gray[500], cursor: "not-allowed" },
-  emptyState: {
-    textAlign: "center",
-    padding: "3rem 2rem",
-    color: colors.gray[500],
-  },
-};
-
 function BookingPage() {
   const [availableSlots, setAvailableSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -129,8 +24,74 @@ function BookingPage() {
   const [isBooking, setIsBooking] = useState(false);
   const [hoveredSlotId, setHoveredSlotId] = useState(null);
   const navigate = useNavigate();
+  const { width } = useWindowSize();
+  const isMobile = width < 768;
 
   const userData = JSON.parse(localStorage.getItem("userData"));
+  const styles = {
+    pageContainer: {
+      fontFamily: "sans-serif",
+      color: "#333",
+      backgroundColor: "#ffffff",
+      padding: "2rem",
+      borderRadius: "8px",
+    },
+    pageHeader: {
+      marginBottom: "2.5rem",
+    },
+    pageTitle: {
+      fontSize: "2.5rem",
+      fontWeight: "700",
+      color: "#1a202c",
+      marginBottom: "0.5rem",
+    },
+    pageSubtitle: {
+      fontSize: "1rem",
+      color: "#4a5568",
+    },
+    slotsGrid: {
+      display: "grid",
+      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+      gap: "1.5rem",
+    },
+    slotCard: {
+      backgroundColor: "#d1fae5", // Warna hijau dari UI
+      borderRadius: "12px",
+      padding: "1.5rem",
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+    },
+    itemDetails: {
+      display: "flex",
+      flexDirection: "column",
+      gap: "0.75rem",
+      color: "#064e3b", // Warna teks lebih gelap agar kontras
+    },
+    detailRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: "0.5rem",
+      fontSize: "0.9rem",
+    },
+    bookingButton: {
+      backgroundColor: "#3b82f6", // Warna biru dari UI
+      color: "white",
+      border: "none",
+      borderRadius: "8px",
+      padding: "0.6rem 1.5rem",
+      fontSize: "0.875rem",
+      fontWeight: "600",
+      cursor: "pointer",
+      transition: "background-color 0.2s",
+    },
+    emptyState: {
+      textAlign: "center",
+      padding: "3rem 2rem",
+      color: "#6b7280",
+    },
+  };
 
   useEffect(() => {
     async function loadAvailableSlots() {
