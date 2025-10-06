@@ -1,31 +1,77 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import useWindowSize from "../hooks/useWindowSize";
+import { useAuth } from "../contexts/AuthContext";
+import { format } from "date-fns";
+import id from "date-fns/locale/id";
 import { Calendar, Clock, User } from "lucide-react";
+import { useMediaQuery } from "react-responsive";
 
 function MySchedulePage() {
+  const [schedules, setSchedules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const { token } = useAuth();
   const navigate = useNavigate();
-  const { width } = useWindowSize();
-  const isMobile = width < 768;
+  const isMobile = useMediaQuery({ maxWidth: 768 });
 
-  // --- MOCK DATA ---
-  const [schedules] = useState([
-    {
-      id: 1,
-      date: "Rabu, 1 Oktober 2025",
-      time: "10.10 - 11.30",
-      counselor: "dr. konselor 1",
-      status: "di jadwalkan",
-    },
-    {
-      id: 2,
-      date: "Rabu, 1 Oktober 2025",
-      time: "10.10 - 11.30",
-      counselor: "dr. konselor 1",
-      status: "di batalkan",
-    },
-    // Anda bisa menambahkan data jadwal lainnya di sini
-  ]);
+  const filteredSchedules = schedules.filter((schedule) => {
+    if (activeFilter === "all") return true;
+    return schedule.status === activeFilter;
+  });
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/slot-jadwals?populate=*`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch schedules");
+        }
+
+        const data = await response.json();
+        setSchedules(data.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedules();
+  }, [token]);
+
+  // Temporary mock data, will be replaced by API data
+  if (loading) {
+    return (
+      <div style={styles.pageContainer}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Jadwal Saya</h1>
+        </div>
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.pageContainer}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Jadwal Saya</h1>
+        </div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "red" }}>
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
 
   const handleReschedule = () => {
     if (
@@ -98,6 +144,9 @@ function MySchedulePage() {
     statusCancelled: {
       backgroundColor: "#ef4444", // Merah
     },
+    statusCompleted: {
+      backgroundColor: "#22c55e", // Hijau
+    },
     actionButton: {
       position: "absolute",
       bottom: "1.5rem",
@@ -128,38 +177,76 @@ function MySchedulePage() {
         </p>
       </div>
 
-      {schedules.length === 0 ? (
+      <div style={{ marginBottom: "2rem" }}>
+        <select
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value)}
+          style={{
+            padding: "0.5rem",
+            borderRadius: "4px",
+            border: "1px solid #d1d5db",
+            marginRight: "1rem",
+          }}
+        >
+          <option value="all">Semua Jadwal</option>
+          <option value="scheduled">Terjadwal</option>
+          <option value="completed">Selesai</option>
+          <option value="cancelled">Dibatalkan</option>
+        </select>
+      </div>
+
+      {filteredSchedules.length === 0 ? (
         <p style={styles.emptyState}>Anda belum memiliki jadwal konsultasi.</p>
       ) : (
         <div style={styles.scheduleGrid}>
-          {schedules.map((item) => {
+          {filteredSchedules.map((schedule) => {
             const statusStyle =
-              item.status === "di batalkan"
+              schedule.status === "cancelled"
                 ? styles.statusCancelled
+                : schedule.status === "completed"
+                ? styles.statusCompleted
                 : styles.statusScheduled;
 
             return (
-              <div key={item.id} style={styles.scheduleCard}>
+              <div key={schedule.id} style={styles.scheduleCard}>
                 <span style={{ ...styles.statusBadge, ...statusStyle }}>
-                  {item.status}
+                  {schedule.status === "scheduled" && "Terjadwal"}
+                  {schedule.status === "completed" && "Selesai"}
+                  {schedule.status === "cancelled" && "Dibatalkan"}
                 </span>
 
                 <div style={styles.detailRow}>
                   <Calendar size={16} />
-                  <span>{item.date}</span>
+                  <span>
+                    {format(
+                      new Date(schedule.attributes.date),
+                      "EEEE, d MMMM yyyy",
+                      { locale: id }
+                    )}
+                  </span>
                 </div>
                 <div style={styles.detailRow}>
                   <Clock size={16} />
-                  <span>{item.time}</span>
+                  <span>
+                    {format(new Date(schedule.attributes.startTime), "HH:mm")} -{" "}
+                    {format(new Date(schedule.attributes.endTime), "HH:mm")}
+                  </span>
                 </div>
                 <div style={{ ...styles.detailRow, marginTop: "0.5rem" }}>
                   <User size={16} />
-                  <span>{item.counselor}</span>
+                  <span>
+                    {schedule.attributes.konselor.data.attributes.name}
+                  </span>
                 </div>
 
-                <button style={styles.actionButton} onClick={handleReschedule}>
-                  Ubah Jadwal
-                </button>
+                {schedule.status === "scheduled" && (
+                  <button
+                    style={styles.actionButton}
+                    onClick={handleReschedule}
+                  >
+                    Ubah Jadwal
+                  </button>
+                )}
               </div>
             );
           })}
