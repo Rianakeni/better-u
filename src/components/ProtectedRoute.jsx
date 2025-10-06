@@ -20,12 +20,26 @@ export default function ProtectedRoute({ children, requiredRole }) {
       </div>
     );
   }
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
-  if (requiredRole && user.role && user.role.name !== requiredRole) {
-    // Jika role tidak sesuai, redirect ke halaman utama
-    return <Navigate to="/" replace />;
+
+  // If children is a function, pass the user object
+  if (typeof children === "function") {
+    return children({ user });
   }
+
+  // Check required role if specified
+  if (requiredRole && user.role && user.role.name !== requiredRole) {
+    // Redirect based on actual role
+    if (user.role.name === "counselor") {
+      return <Navigate to="/counselor/dashboard" replace />;
+    } else if (user.role.name === "student") {
+      return <Navigate to="/student/dashboard" replace />;
+    }
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 }

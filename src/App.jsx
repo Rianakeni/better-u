@@ -1,8 +1,7 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
-import DashboardPage from "./pages/DashboardPage.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
@@ -24,9 +23,16 @@ function App() {
           <Route
             path="/"
             element={
-              <DashboardLayout>
-                <DashboardPage />
-              </DashboardLayout>
+              <ProtectedRoute>
+                {({ user }) => {
+                  if (user?.role?.name === "counselor") {
+                    return <Navigate to="/counselor/dashboard" replace />;
+                  } else if (user?.role?.name === "student") {
+                    return <Navigate to="/student/dashboard" replace />;
+                  }
+                  return <Navigate to="/login" replace />;
+                }}
+              </ProtectedRoute>
             }
           />
           {/* Dashboard khusus student */}

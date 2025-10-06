@@ -13,9 +13,12 @@ export function AuthProvider({ children }) {
     const authToken = localStorage.getItem("authToken");
     if (userString && authToken) {
       try {
-        setUser(JSON.parse(userString));
+        const userData = JSON.parse(userString);
+        console.log("Loaded user data:", userData); // untuk debugging
+        setUser(userData);
         setToken(authToken);
-      } catch {
+      } catch (error) {
+        console.error("Error parsing user data:", error);
         setUser(null);
         setToken(null);
       }

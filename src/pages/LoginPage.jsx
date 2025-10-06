@@ -64,25 +64,137 @@ function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setError("");
+  //   try {
+  //     console.log("Attempting login with:", { identifier, password });
+  //     const res = await fetch("http://127.0.0.1:1337/api/auth/local", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ identifier, password }),
+  //     });
+  //     const data = await res.json();
+  //     console.log("Login response:", data);
+
+  //     if (!res.ok) {
+  //       console.error("Login failed:", data);
+  //       throw new Error(data.error?.message || "Login gagal");
+  //     }
+
+  //     // Periksa email dan role
+  //     const email = data.user.email;
+
+  //     // Ambil user dengan role menggunakan endpoint me
+  //     const meRes = await fetch(
+  //       "http://127.0.0.1:1337/api/users/me?populate=role",
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${data.jwt}`,
+  //         },
+  //       }
+  //     );
+  //     const meData = await meRes.json();
+  //     console.log("User data with role:", meData);
+
+  //     const role = meData.role?.name?.toLowerCase();
+
+  //     console.log("Login successful!");
+  //     console.log("User Email:", email);
+  //     console.log("User Role:", role);
+  //     console.log("Full User Data:", JSON.stringify(data.user, null, 2));
+
+  //     // Jika user belum punya role
+  //     if (!role) {
+  //       console.error("User tidak memiliki role!");
+  //       throw new Error(
+  //         "Akun Anda belum memiliki role yang sesuai. Silakan hubungi administrator."
+  //       );
+  //     }
+
+  //     if (email === "counselor@unklab.ac.id" && role === "counselor") {
+  //       console.log("Logging in as counselor...");
+  //       login(data.user, data.jwt);
+  //       navigate("/counselor/dashboard");
+  //     } else if (
+  //       email === "student1@student.unklab.ac.id" &&
+  //       role === "student"
+  //     ) {
+  //       console.log("Logging in as student...");
+  //       login(data.user, data.jwt);
+  //       navigate("/student/dashboard");
+  //     } else {
+  //       console.error("Role mismatch:", {
+  //         email: email,
+  //         role: role,
+  //         userData: data.user,
+  //       });
+  //       throw new Error(
+  //         `Role tidak sesuai dengan email. Role Anda: ${role || "tidak ada"}`
+  //       );
+  //     }
+  //   } catch (err) {
+  //     setError(err.message);
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     try {
-      const res = await fetch("http://localhost:1337/api/auth/local", {
+      console.log("Attempting login with:", { identifier, password });
+      // Login request
+      const res = await fetch("http://127.0.0.1:1337/api/auth/local", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error?.message || "Login gagal");
-      login(data.user, data.jwt);
-      // Redirect ke dashboard sesuai role
-      if (data.user.role && data.user.role.name === "counselor") {
+      console.log("Login response:", data);
+
+      if (!res.ok) {
+        console.error("Login failed:", data);
+        throw new Error(data.error?.message || "Login gagal");
+      }
+
+      // Ambil data user lengkap dengan role
+      const meRes = await fetch(
+        "http://127.0.0.1:1337/api/users/me?populate=role",
+        {
+          headers: {
+            Authorization: `Bearer ${data.jwt}`,
+          },
+        }
+      );
+      const meData = await meRes.json();
+      console.log("User data with role:", meData);
+
+      const email = data.user.email;
+      const role = meData.role?.name?.toLowerCase();
+
+      // Update user data dengan role
+      const updatedUserData = { ...data.user, role: meData.role };
+
+      if (email === "counselor@unklab.ac.id" && role === "counselor") {
+        console.log("Logging in as counselor...");
+        login(updatedUserData, data.jwt);
         navigate("/counselor/dashboard");
-      } else if (data.user.role && data.user.role.name === "student") {
+      } else if (
+        email === "student1@student.unklab.ac.id" &&
+        role === "student"
+      ) {
+        console.log("Logging in as student...");
+        login(updatedUserData, data.jwt);
         navigate("/student/dashboard");
       } else {
-        navigate("/");
+        console.error("Role mismatch:", {
+          email: email,
+          role: role,
+          userData: meData,
+        });
+        throw new Error(
+          `Role tidak sesuai. Email: ${email}, Role: ${role || "tidak ada"}`
+        );
       }
     } catch (err) {
       setError(err.message);
