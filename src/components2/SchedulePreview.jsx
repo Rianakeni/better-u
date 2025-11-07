@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { format } from "date-fns";
 import id from "date-fns/locale/id";
 
+// Pindahkan styles ke luar komponen
 const styles = {
   container: {
     backgroundColor: "white",
@@ -54,21 +55,15 @@ const styles = {
     fontSize: "0.75rem",
     fontWeight: "500",
     backgroundColor:
-      status === "scheduled"
-        ? "#E6FFE6"
-        : status === "completed"
-        ? "#E6E6FF"
-        : status === "cancelled"
-        ? "#FFE6E6"
-        : "#E6FFE6",
+      status === "active" ? "#E6FFE6" :
+      status === "completed" ? "#E6E6FF" :
+      status === "cancelled" ? "#FFE6E6" :
+      "#E6FFE6",
     color:
-      status === "scheduled"
-        ? "#006600"
-        : status === "completed"
-        ? "#000066"
-        : status === "cancelled"
-        ? "#660000"
-        : "#006600",
+      status === "active" ? "#006600" :
+      status === "completed" ? "#000066" :
+      status === "cancelled" ? "#660000" :
+      "#006600",
   }),
   noSchedule: {
     textAlign: "center",
@@ -87,34 +82,40 @@ function SchedulePreview() {
   useEffect(() => {
     async function fetchSchedules() {
       try {
-        // Mengambil 3 jadwal terdekat yang belum selesai
         const now = new Date().toISOString();
-        const baseUrl =
-          process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:1337";
+        const baseUrl = "http://127.0.0.1:1337";
+        
+        // Log untuk debugging
+        console.log('Fetching schedules for user:', user?.id);
+        
         const params = new URLSearchParams({
-          "filters[mahasiswa][id][$eq]": user.id,
-          "filters[waktu_sesi][$gte]": now,
-          sort: "waktu_sesi:asc",
-          "pagination[limit]": "3",
-          populate: "konselor,layanan_konseling",
+          'filters[mahasiswa][id][$eq]': user?.id,
+          'sort': 'waktu_mulai:asc',
+          'pagination[limit]': '3',
+          'populate': '*'
         });
 
-        const response = await fetch(
-          `${baseUrl}/api/jadwal-availables?${params}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const url = `${baseUrl}/api/slot-jadwals?${params}`;
+        console.log('Fetching URL:', url);
+
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
         if (!response.ok) {
-          throw new Error("Gagal mengambil data jadwal");
+          const errorData = await response.json();
+          console.error('API Error:', errorData);
+          throw new Error(errorData.error?.message || 'Failed to fetch schedules');
         }
 
         const data = await response.json();
+        console.log('Fetched data:', data);
         setSchedules(data.data || []);
       } catch (err) {
+        console.error('Fetch error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -146,37 +147,23 @@ function SchedulePreview() {
           schedules.map((schedule) => (
             <div key={schedule.id} style={styles.scheduleItem}>
               <div style={styles.scheduleDate}>
-                {format(
-                  new Date(schedule.attributes.waktu_sesi),
-                  "EEEE, d MMMM yyyy",
-                  { locale: id }
-                )}
+                {format(new Date(schedule.attributes.waktu_mulai), 'EEEE, d MMMM yyyy', { locale: id })}
               </div>
               <div style={styles.scheduleInfo}>
+                <div>Waktu: {format(new Date(schedule.attributes.waktu_mulai), 'HH:mm')}</div>
                 <div>
-                  Waktu:{" "}
-                  {format(new Date(schedule.attributes.waktu_sesi), "HH:mm")}
+                  Konselor: {schedule.attributes.konselor?.data?.attributes?.nama || 'Belum ditentukan'}
                 </div>
                 <div>
-                  Konselor:{" "}
-                  {schedule.attributes.konselor?.data?.attributes?.nama ||
-                    "Belum ditentukan"}
-                </div>
-                <div>
-                  Layanan:{" "}
-                  {schedule.attributes.layanan_konseling?.data?.attributes
-                    ?.nama_layanan || "-"}
+                  Layanan: {schedule.attributes.layanan_konseling?.data?.attributes?.nama_layanan || '-'}
                 </div>
               </div>
-              <div style={{ marginTop: "0.5rem" }}>
-                <span style={styles.status(schedule.attributes.status_jadwal)}>
-                  {schedule.attributes.status_jadwal === "scheduled"
-                    ? "Terjadwal"
-                    : schedule.attributes.status_jadwal === "completed"
-                    ? "Selesai"
-                    : schedule.attributes.status_jadwal === "cancelled"
-                    ? "Dibatalkan"
-                    : "Terjadwal"}
+              <div style={{ marginTop: '0.5rem' }}>
+                <span style={styles.status(schedule.attributes.status_slot)}>
+                  {schedule.attributes.status_slot === 'active' ? 'Terjadwal' :
+                   schedule.attributes.status_slot === 'completed' ? 'Selesai' :
+                   schedule.attributes.status_slot === 'cancelled' ? 'Dibatalkan' :
+                   'Terjadwal'}
                 </span>
               </div>
             </div>

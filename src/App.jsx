@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./layouts/DashboardLayout.jsx";
-import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ProtectedRoute from "./components2/ProtectedRoute.jsx";
 import BookingPage from "./pages/BookingPage.jsx";
 import HistoryPage from "./pages/HistoryPage.jsx";
 import ProfilePage from "./pages/ProfilePage.jsx";
@@ -10,7 +10,7 @@ import AuthCallback from "./pages/AuthCallback.jsx";
 import { AuthProvider } from "./contexts/AuthContext";
 import MySchedulePage from "./pages/MySchedulePage.jsx";
 import CounselorDashboard from "./pages/counselor/CounselorDashboard";
-import RekamMedisPage from "./pages/counselor/RekamMedisPage";
+import RekamMedisForm from "./pages/counselor/RekamMedisForm.jsx";
 import StudentDashboard from "./pages/student/Dashboard";
 
 function App() {
@@ -100,7 +100,7 @@ function App() {
             element={
               <ProtectedRoute requiredRole="counselor">
                 <DashboardLayout>
-                  <RekamMedisPage />
+                  <RekamMedisForm />
                 </DashboardLayout>
               </ProtectedRoute>
             }

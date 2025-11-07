@@ -124,7 +124,7 @@ function BookingPage() {
       const authToken = localStorage.getItem("authToken");
 
       const bookingRes = await fetch(
-        "http://localhost:1337/api/jadwal-konsultasis",
+        "http://localhost:1337/api/jadwal-availables",
         {
           method: "POST",
           headers: {

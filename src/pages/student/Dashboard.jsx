@@ -2,7 +2,7 @@ import React from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link } from "react-router-dom";
 import useWindowSize from "../../hooks/useWindowSize";
-import SchedulePreview from "../../components/SchedulePreview";
+import SchedulePreview from "../../components2/SchedulePreview";
 
 function StudentDashboard() {
   const { user } = useAuth();

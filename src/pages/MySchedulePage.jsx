@@ -11,77 +11,9 @@ function MySchedulePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useMediaQuery({ maxWidth: 768 });
-
-  const filteredSchedules = schedules.filter((schedule) => {
-    if (activeFilter === "all") return true;
-    return schedule.status === activeFilter;
-  });
-
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const response = await fetch(
-          `${process.env.REACT_APP_BACKEND_URL}/api/slot-jadwals?populate=*`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch schedules");
-        }
-
-        const data = await response.json();
-        setSchedules(data.data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSchedules();
-  }, [token]);
-
-  // Temporary mock data, will be replaced by API data
-  if (loading) {
-    return (
-      <div style={styles.pageContainer}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Jadwal Saya</h1>
-        </div>
-        <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div style={styles.pageContainer}>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Jadwal Saya</h1>
-        </div>
-        <div style={{ textAlign: "center", padding: "2rem", color: "red" }}>
-          Error: {error}
-        </div>
-      </div>
-    );
-  }
-
-  const handleReschedule = () => {
-    if (
-      window.confirm(
-        "Apakah Anda yakin ingin mengubah jadwal? Jadwal lama Anda akan dibatalkan dan Anda akan diarahkan ke halaman booking."
-      )
-    ) {
-      navigate("/booking");
-    }
-  };
 
   const styles = {
     pageContainer: {
@@ -165,6 +97,79 @@ function MySchedulePage() {
       padding: "3rem 2rem",
       color: "#6b7280",
     },
+  };
+
+  const filteredSchedules = schedules.filter((schedule) => {
+    if (activeFilter === "all") return true;
+    return schedule.status === activeFilter;
+  });
+
+  useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const params = new URLSearchParams({
+          "filters[mahasiswa][id][$eq]": user.id,
+          populate: "*",
+        });
+
+        const response = await fetch(
+          `${process.env.REACT_APP_BACKEND_URL}/api/jadwal-availables?${params}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch schedules");
+        }
+
+        const data = await response.json();
+        setSchedules(data.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSchedules();
+  }, [token, user?.id]);
+
+  // Temporary mock data, will be replaced by API data
+  if (loading) {
+    return (
+      <div style={styles.pageContainer}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Jadwal Saya</h1>
+        </div>
+        <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={styles.pageContainer}>
+        <div style={styles.header}>
+          <h1 style={styles.title}>Jadwal Saya</h1>
+        </div>
+        <div style={{ textAlign: "center", padding: "2rem", color: "red" }}>
+          Error: {error}
+        </div>
+      </div>
+    );
+  }
+
+  const handleReschedule = () => {
+    if (
+      window.confirm(
+        "Apakah Anda yakin ingin mengubah jadwal? Jadwal lama Anda akan dibatalkan dan Anda akan diarahkan ke halaman booking."
+      )
+    ) {
+      navigate("/booking");
+    }
   };
 
   return (
